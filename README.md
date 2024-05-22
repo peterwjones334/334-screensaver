@@ -13,3 +13,4 @@ Samples for:
 - 8bit Aquarium
 - Bouncing Logo
 - The Matrix
+- Flying Plane
