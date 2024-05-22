@@ -14,3 +14,4 @@ Samples for:
 - Bouncing Logo
 - The Matrix
 - Flying Plane
+- Rotating 3D Cube
