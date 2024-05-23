@@ -18,3 +18,4 @@ Samples for:
 - 3D Pipes
 - One Ring
 - Floating Astronaut
+- 3D Text
