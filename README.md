@@ -17,3 +17,4 @@ Samples for:
 - Rotating 3D Cube
 - 3D Pipes
 - One Ring
+- Floating Astronaut
