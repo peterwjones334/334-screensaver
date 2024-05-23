@@ -16,3 +16,4 @@ Samples for:
 - Flying Plane
 - Rotating 3D Cube
 - 3D Pipes
+- One Ring
