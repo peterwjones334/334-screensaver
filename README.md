@@ -19,3 +19,4 @@ Samples for:
 - One Ring
 - Floating Astronaut
 - 3D Text
+- Haunted House
