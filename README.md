@@ -20,3 +20,4 @@ Samples for:
 - Floating Astronaut
 - 3D Text
 - Haunted House
+- Floating Objects
