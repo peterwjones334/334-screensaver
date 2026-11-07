@@ -1,26 +1,18 @@
-import pygame
 import random
+from base import Screensaver, load_image
 
-# Initialize Pygame
-pygame.init()
 
-# Screen dimensions
-WIDTH = 800
-HEIGHT = 600
-
-# Colors
-BLACK = (0, 0, 0)
-
-# Toaster class
-class Toaster:
-    def __init__(self, image, speed):
+class Appliance:
+    def __init__(self, image, speed, width, height):
         self.image = image
         self.speed = speed
+        self.width = width
+        self.height = height
         self.reset()
 
     def reset(self):
-        self.x = random.randint(0, WIDTH - self.image.get_width())
-        self.y = random.randint(0, HEIGHT - self.image.get_height())
+        self.x = random.randint(0, self.width - self.image.get_width())
+        self.y = random.randint(0, self.height - self.image.get_height())
         self.direction = random.choice(["left", "right"])
 
     def update(self):
@@ -30,37 +22,31 @@ class Toaster:
                 self.reset()
         else:
             self.x += self.speed
-            if self.x > WIDTH:
+            if self.x > self.width:
                 self.reset()
 
     def show(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
-# Setup screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Flying Toasters Screensaver")
 
-# Load toaster image
-toaster_image = pygame.image.load("toaster.png").convert_alpha()
-num_toasters = 10
-toasters = [Toaster(toaster_image, random.randint(1, 5)) for _ in range(num_toasters)]
+class FlyingAppliancesScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Flying Appliances")
+        self.image = load_image("toaster.png")
+        self.appliances = [
+            Appliance(self.image, random.randint(1, 5), self.width, self.height)
+            for _ in range(10)
+        ]
 
-# Main loop
-running = True
-clock = pygame.time.Clock()
+    def update(self):
+        for a in self.appliances:
+            a.update()
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        for a in self.appliances:
+            a.show(self.screen)
 
-    screen.fill(BLACK)
 
-    for toaster in toasters:
-        toaster.update()
-        toaster.show(screen)
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+if __name__ == "__main__":
+    FlyingAppliancesScreensaver().run()

@@ -1,90 +1,62 @@
-import sys
 import random
 import pygame
+from base import Screensaver
 
-# Initialize Pygame
-pygame.init()
-
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
-
-# Colors
-BLACK = (0, 0, 0)
 COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (255, 255, 255)]
 
-# Pipe class
+
 class Pipe:
-    def __init__(self, x, y, direction, color):
+    def __init__(self, x, y, direction, color, width, height):
         self.x = x
         self.y = y
         self.direction = direction
         self.color = color
         self.size = 10
         self.history = [(x, y)]
+        self.width = width
+        self.height = height
 
     def update(self):
-        if self.direction == 0:  # Move right
+        if self.direction == 0:
             self.x += self.size
-        elif self.direction == 1:  # Move down
+        elif self.direction == 1:
             self.y += self.size
-        elif self.direction == 2:  # Move left
+        elif self.direction == 2:
             self.x -= self.size
-        elif self.direction == 3:  # Move up
+        elif self.direction == 3:
             self.y -= self.size
 
-        # Append the new position to the history
         self.history.append((self.x, self.y))
 
-        # Randomly change direction
         if random.randint(0, 9) == 0:
             self.direction = random.randint(0, 3)
 
-        # Keep the pipe within screen bounds
-        if self.x < 0 or self.x >= WIDTH or self.y < 0 or self.y >= HEIGHT:
-            self.x, self.y = WIDTH // 2, HEIGHT // 2
+        if self.x < 0 or self.x >= self.width or self.y < 0 or self.y >= self.height:
+            self.x, self.y = self.width // 2, self.height // 2
             self.history = [(self.x, self.y)]
 
     def draw(self, screen):
         for i in range(len(self.history) - 1):
-            start_pos = self.history[i]
-            end_pos = self.history[i + 1]
-            pygame.draw.line(screen, self.color, start_pos, end_pos, self.size)
+            pygame.draw.line(screen, self.color, self.history[i], self.history[i + 1], self.size)
 
-# Function to handle the screensaver behavior
-def run_screensaver():
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Pipes Screensaver")
 
-    pipes = [Pipe(WIDTH // 2, HEIGHT // 2, random.randint(0, 3), random.choice(COLORS)) for _ in range(5)]
+class PipesScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Pipes Screensaver", fps=30)
+        self.pipes = [
+            Pipe(self.width // 2, self.height // 2, random.randint(0, 3), random.choice(COLORS), self.width, self.height)
+            for _ in range(5)
+        ]
 
-    running = True
-    clock = pygame.time.Clock()
-
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        screen.fill(BLACK)
-
-        for pipe in pipes:
+    def update(self):
+        for pipe in self.pipes:
             pipe.update()
-            pipe.draw(screen)
 
-        pygame.display.flip()
-        clock.tick(30)
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        for pipe in self.pipes:
+            pipe.draw(self.screen)
 
-    pygame.quit()
 
-# Check command line arguments to determine mode
-if len(sys.argv) == 1:
-    run_screensaver()
-elif sys.argv[1] == '/s':
-    run_screensaver()
-elif sys.argv[1] == '/c':
-    print("No configuration needed.")
-elif sys.argv[1] == '/p':
-    hwnd = int(sys.argv[2])
-    print("Preview window not implemented.")
-else:
-    run_screensaver()
+if __name__ == "__main__":
+    PipesScreensaver().run()
