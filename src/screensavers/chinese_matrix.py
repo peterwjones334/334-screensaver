@@ -1,61 +1,36 @@
-import pygame
 import random
-import os
+import pygame
+from base import Screensaver, load_image
 
-# Initialize Pygame
-pygame.init()
-
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Matrix Falling Characters Screensaver")
-
-# Load background image
-background_image_path = "chinese_matrix_background.png"
-if os.path.exists(background_image_path):
-    background_image = pygame.image.load(background_image_path).convert()
-    background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-else:
-    background_image = None
-
-# Colors
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GOLD = (255, 215, 0)
-DARK_RED = (139, 0, 0)
-
-# Font settings
 FONT_SIZE = 20
-font = pygame.font.SysFont("SimSun", FONT_SIZE, bold=True)
-
-# Chinese characters
 CHINESE_CHARACTERS = "你好世界欢迎使用程序员"
 
-# Define the Character class
+
 class Character:
-    def __init__(self, x, y, speed):
+    def __init__(self, x, y, speed, height):
         self.x = x
         self.y = y
         self.speed = speed
+        self.height = height
         self.value = random.choice(CHINESE_CHARACTERS)
         self.trail = []
         self.blink = random.choice([True, False])
         self.blink_timer = random.randint(5, 20)
-        self.color = (random.randint(200, 255), random.randint(100, 200), 0)  # Gold-themed
+        self.color = (random.randint(200, 255), random.randint(100, 200), 0)
+        self.font = pygame.font.SysFont("SimSun", FONT_SIZE, bold=True)
 
     def update(self):
         self.trail.append((self.x, self.y, self.value))
-        if len(self.trail) > 15:  # Increase the length of the trail
+        if len(self.trail) > 15:
             self.trail.pop(0)
 
         self.y += self.speed
-        if self.y > HEIGHT:
+        if self.y > self.height:
             self.y = random.randint(-20, -1)
             self.value = random.choice(CHINESE_CHARACTERS)
             self.trail = []
-            self.color = (random.randint(200, 255), random.randint(100, 200), 0)  # Gold-themed
+            self.color = (random.randint(200, 255), random.randint(100, 200), 0)
 
-        # Update blinking
         if self.blink:
             self.blink_timer -= 1
             if self.blink_timer <= 0:
@@ -64,52 +39,45 @@ class Character:
 
     def draw(self, surface):
         for i, (tx, ty, tvalue) in enumerate(self.trail):
-            shade = 255 - (i * 15)  # Adjust the fading effect
+            shade = 255 - (i * 15)
             char_color = (shade, 0, 0)
-            char = font.render(tvalue, True, char_color)
+            char = self.font.render(tvalue, True, char_color)
             surface.blit(char, (tx, ty))
         if not self.blink:
-            char = font.render(self.value, True, self.color)
+            char = self.font.render(self.value, True, self.color)
             surface.blit(char, (self.x, self.y))
 
-# Create a list of falling characters
-def create_falling_chars(columns):
-    falling_chars = []
-    for col in range(columns):
-        for _ in range(random.randint(8, 15)):  # Increase density and overlap
-            x = col * (FONT_SIZE // 2)  # Reduce spacing between columns
-            y = random.randint(-HEIGHT, 0)
-            speed = random.uniform(2, 5)
-            falling_chars.append(Character(x, y, speed))
-    return falling_chars
 
-# Main loop
-def main():
-    running = True
-    clock = pygame.time.Clock()
-    columns = WIDTH // (FONT_SIZE // 2)
-    falling_chars = create_falling_chars(columns)
+class ChineseMatrixScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Chinese Matrix")
+        try:
+            bg = load_image("chinese_matrix_background.png", convert_alpha=False)
+            self.background = pygame.transform.scale(bg, (self.width, self.height))
+        except FileNotFoundError:
+            self.background = None
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                running = False
+        columns = self.width // (FONT_SIZE // 2)
+        self.falling_chars = []
+        for col in range(columns):
+            for _ in range(random.randint(8, 15)):
+                x = col * (FONT_SIZE // 2)
+                y = random.randint(-self.height, 0)
+                speed = random.uniform(2, 5)
+                self.falling_chars.append(Character(x, y, speed, self.height))
 
-        if background_image:
-            screen.blit(background_image, (0, 0))
-        else:
-            screen.fill(BLACK)
-
-        for char in falling_chars:
+    def update(self):
+        for char in self.falling_chars:
             char.update()
-            char.draw(screen)
 
-        pygame.display.flip()
-        clock.tick(60)
+    def draw(self):
+        if self.background:
+            self.screen.blit(self.background, (0, 0))
+        else:
+            self.screen.fill((0, 0, 0))
+        for char in self.falling_chars:
+            char.draw(self.screen)
 
-    pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    ChineseMatrixScreensaver().run()

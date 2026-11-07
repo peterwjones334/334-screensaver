@@ -1,142 +1,94 @@
-import pygame
-import math
 import random
-import sys
+import pygame
+from base import Screensaver, load_image
 
-# Initialize Pygame
-pygame.init()
 
-# Get screen dimensions
-info = pygame.display.Info()
-width, height = info.current_w, info.current_h
+class AstronautScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Astronaut Screensaver", fullscreen=True)
+        self.astronaut_img = load_image("astronaut1.png")
+        self.satellite_img = load_image("satellite1.png")
+        try:
+            bg = load_image("space1.png", convert_alpha=False)
+            self.background = pygame.transform.scale(bg, (self.width, self.height))
+        except FileNotFoundError:
+            self.background = None
 
-# Set up the display in full screen
-screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
-pygame.display.set_caption("Astronaut Screensaver")
+        self.satellite_center = (self.width // 2, self.height // 2)
+        self.satellite_angle = 0
+        self.satellite_rotation_speed = 0.05
 
-# Load images
-astronaut_img = pygame.image.load("astronaut1.png").convert_alpha()
-satellite_img = pygame.image.load("satellite1.png").convert_alpha()
+        self.astronaut_x = random.randint(0, self.width)
+        self.astronaut_y = random.randint(0, self.height)
+        self.astronaut_speed_x = random.uniform(-1, 1)
+        self.astronaut_speed_y = random.uniform(-1, 1)
 
-# Load and scale the optional background image
-background_img = pygame.image.load("space1.png").convert() if pygame.image.get_extended() else None
-if background_img:
-    background_img = pygame.transform.scale(background_img, (width, height))
+        self.stars = []
+        for _ in range(100):
+            self.stars.append([
+                random.randint(0, self.width),
+                random.randint(0, self.height),
+                random.randint(128, 255),
+                random.uniform(0.05, 0.1),
+                False,
+                2,
+            ])
 
-# Background color
-bg_color = (0, 0, 30)
+        self.nova_timer = 0
+        self.nova_interval = random.randint(5000, 10000)
 
-# Satellite properties
-satellite_center = (width // 2, height // 2)
-satellite_radius = 50
-satellite_angle = 0
-satellite_rotation_speed = 0.05
+    def update(self):
+        self.satellite_angle = (self.satellite_angle + self.satellite_rotation_speed) % 360
 
-# Astronaut properties
-astronaut_x = random.randint(0, width)
-astronaut_y = random.randint(0, height)
-astronaut_speed_x = random.uniform(-1, 1)
-astronaut_speed_y = random.uniform(-1, 1)
+        self.astronaut_x += self.astronaut_speed_x
+        self.astronaut_y += self.astronaut_speed_y
+        aw, ah = self.astronaut_img.get_size()
+        if self.astronaut_x < -aw:
+            self.astronaut_x = self.width
+        elif self.astronaut_x > self.width:
+            self.astronaut_x = -aw
+        if self.astronaut_y < -ah:
+            self.astronaut_y = self.height
+        elif self.astronaut_y > self.height:
+            self.astronaut_y = -ah
 
-# Star properties
-num_stars = 100
-stars = []
-for _ in range(num_stars):
-    star_x = random.randint(0, width)
-    star_y = random.randint(0, height)
-    brightness = random.randint(128, 255)
-    twinkle_speed = random.uniform(0.05, 0.1)
-    stars.append([star_x, star_y, brightness, twinkle_speed, False, 2])  # Added nova state and radius
+        self.nova_timer += self.clock.get_time()
+        if self.nova_timer >= self.nova_interval:
+            self.nova_timer = 0
+            self.nova_interval = random.randint(5000, 10000)
+            star = random.choice(self.stars)
+            star[4] = True
 
-# Function to draw stars
-def draw_stars(screen, stars):
-    for star in stars:
-        star_x, star_y, brightness, twinkle_speed, is_nova, radius = star
-        
-        if is_nova:
-            # Expand and fade out nova star
-            brightness = 255  # Flash bright white
-            radius += 2
-            if radius > 10:  # End nova state after expanding
-                star[4] = False  # End nova state
-                brightness = random.randint(128, 255)
-                radius = 2
+    def draw(self):
+        if self.background:
+            self.screen.blit(self.background, (0, 0))
         else:
-            # Normal twinkling
-            brightness += twinkle_speed
-            if brightness >= 255 or brightness <= 128:
-                twinkle_speed = -twinkle_speed
-        
-        brightness = max(0, min(255, brightness))
-        star[2] = brightness
-        star[3] = twinkle_speed
-        star[5] = radius
-        color = (brightness, brightness, brightness)
-        pygame.draw.circle(screen, color, (star_x, star_y), radius)
+            self.screen.fill((0, 0, 30))
 
-# Clock to control frame rate
-clock = pygame.time.Clock()
+        for star in self.stars:
+            star_x, star_y, brightness, twinkle_speed, is_nova, radius = star
+            if is_nova:
+                brightness = 255
+                radius += 2
+                if radius > 10:
+                    star[4] = False
+                    brightness = random.randint(128, 255)
+                    radius = 2
+            else:
+                brightness += twinkle_speed
+                if brightness >= 255 or brightness <= 128:
+                    twinkle_speed = -twinkle_speed
+            brightness = max(0, min(255, brightness))
+            star[2] = brightness
+            star[3] = twinkle_speed
+            star[5] = radius
+            pygame.draw.circle(self.screen, (brightness, brightness, brightness), (star_x, star_y), radius)
 
-# Timer for nova events
-nova_timer = 0
-nova_interval = random.randint(5000, 10000)  # Random interval between 5 and 10 seconds
+        rotated = pygame.transform.rotate(self.satellite_img, self.satellite_angle)
+        rect = rotated.get_rect(center=self.satellite_center)
+        self.screen.blit(rotated, rect.topleft)
+        self.screen.blit(self.astronaut_img, (self.astronaut_x, self.astronaut_y))
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            running = False
 
-    # Update satellite rotation
-    satellite_angle += satellite_rotation_speed
-    if satellite_angle >= 360:
-        satellite_angle -= 360
-    rotated_satellite = pygame.transform.rotate(satellite_img, satellite_angle)
-    satellite_rect = rotated_satellite.get_rect(center=satellite_center)
-
-    # Update astronaut position
-    astronaut_x += astronaut_speed_x
-    astronaut_y += astronaut_speed_y
-
-    # Wrap astronaut position around screen
-    if astronaut_x < -astronaut_img.get_width():
-        astronaut_x = width
-    elif astronaut_x > width:
-        astronaut_x = -astronaut_img.get_width()
-    if astronaut_y < -astronaut_img.get_height():
-        astronaut_y = height
-    elif astronaut_y > height:
-        astronaut_y = -astronaut_img.get_height()
-
-    # Draw everything
-    if background_img:
-        screen.blit(background_img, (0, 0))
-    else:
-        screen.fill(bg_color)
-
-    draw_stars(screen, stars)
-
-    screen.blit(rotated_satellite, satellite_rect.topleft)
-    screen.blit(astronaut_img, (astronaut_x, astronaut_y))
-
-    # Display update
-    pygame.display.flip()
-
-    # Check for nova event
-    nova_timer += clock.get_time()
-    if nova_timer >= nova_interval:
-        nova_timer = 0
-        nova_interval = random.randint(5000, 10000)
-        # Trigger a nova event for a random star
-        star = random.choice(stars)
-        star[4] = True
-
-    # Cap the frame rate
-    clock.tick(60)
-
-pygame.quit()
-sys.exit()
+if __name__ == "__main__":
+    AstronautScreensaver().run()
