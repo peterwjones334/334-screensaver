@@ -1,215 +1,157 @@
-import pygame
-import sys
 import random
 import time
+import pygame
+from base import Screensaver, load_image
 
-def main(image_path, ghost_image_paths, eyes_image_path, bat_image_path, logo_image_path, skull_image_path):
-    pygame.init()
 
-    # Define the size of the window
-    window_size = (1025, 768)
-    screen = pygame.display.set_mode(window_size)
-    pygame.display.set_caption("Pygame PNG Image Display with Moving Ghost Sprites and Eyes")
+class GhostSprite(pygame.sprite.Sprite):
+    def __init__(self, image, x, y, width, height):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.width = width
+        self.height = height
 
-    # Load the PNG image with transparency
-    image = pygame.image.load(image_path).convert_alpha()
+    def update(self):
+        self.rect.x += random.randint(-5, 5)
+        self.rect.y += random.randint(-5, 5)
+        self.rect.x = max(0, min(self.rect.x, self.width - self.rect.width))
+        self.rect.y = max(0, min(self.rect.y, self.height - self.rect.height))
 
-    # Create a sprite group for ghosts
-    ghosts = pygame.sprite.Group()
 
-    # Create a sprite class for ghost images
-    class GhostSprite(pygame.sprite.Sprite):
-        def __init__(self, image_path, x, y):
-            super().__init__()
-            self.image = pygame.image.load(image_path).convert_alpha()
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
+class EyesSprite(pygame.sprite.Sprite):
+    def __init__(self, image, x, y, width, height):
+        super().__init__()
+        self.original_image = image
+        self.image = image
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.width = width
+        self.height = height
+        self.blinking = False
 
-        def update(self):
-            # Randomly move the ghost within a small range to create a shaky effect
-            self.rect.x += random.randint(-5, 5)
-            self.rect.y += random.randint(-5, 5)
-
-            # Keep the ghosts within the window bounds
-            if self.rect.x < 0:
-                self.rect.x = 0
-            elif self.rect.x > window_size[0] - self.rect.width:
-                self.rect.x = window_size[0] - self.rect.width
-
-            if self.rect.y < 0:
-                self.rect.y = 0
-            elif self.rect.y > window_size[1] - self.rect.height:
-                self.rect.y = window_size[1] - self.rect.height
-
-    # Add ghost sprites from the provided image paths
-    ghost_positions = [(256, 384), (512, 384), (600, 384)]  # Example positions
-    for i, ghost_image_path in enumerate(ghost_image_paths):
-        ghost = GhostSprite(ghost_image_path, *ghost_positions[i])
-        ghosts.add(ghost)
-
-    # Create a sprite for the eyes
-    class EyesSprite(pygame.sprite.Sprite):
-        def __init__(self, image_path, x, y):
-            super().__init__()
-            self.image = pygame.image.load(image_path).convert_alpha()
-            self.original_image = self.image  # Store the original image for blinking
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
+    def blink(self):
+        if not self.blinking:
+            self.image = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+            self.blinking = True
+        else:
+            self.image = self.original_image
             self.blinking = False
 
-        def blink(self):
-            if not self.blinking:
-                self.image = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-                self.blinking = True
-            else:
-                self.image = self.original_image
-                self.blinking = False
+    def move(self, dx, dy):
+        self.rect.x = max(0, min(self.rect.x + dx, self.width - self.rect.width))
+        self.rect.y = max(0, min(self.rect.y + dy, self.height - self.rect.height))
 
-        def move(self, dx, dy):
-            self.rect.x += dx
-            self.rect.y += dy
 
-            # Keep the eyes within the window bounds
-            if self.rect.x < 0:
-                self.rect.x = 0
-            elif self.rect.x > window_size[0] - self.rect.width:
-                self.rect.x = window_size[0] - self.rect.width
+class BatSprite(pygame.sprite.Sprite):
+    def __init__(self, image, x, y, direction, width, height):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.direction = direction
+        self.width = width
+        self.height = height
+        self.vertical_movement = 0
 
-            if self.rect.y < 0:
-                self.rect.y = 0
-            elif self.rect.y > window_size[1] - self.rect.height:
-                self.rect.y = window_size[1] - self.rect.height
+    def update(self):
+        if self.direction == "right":
+            self.rect.x += 5
+            if self.rect.x > self.width:
+                self.rect.x = -self.rect.width
+        else:
+            self.rect.x -= 5
+            if self.rect.x < -self.rect.width:
+                self.rect.x = self.width
 
-    # Initialize the eyes sprite
-    eyes = EyesSprite(eyes_image_path, 512, 268)  # Example position
+        self.vertical_movement += random.choice([-1, 1])
+        self.rect.y += self.vertical_movement
+        self.vertical_movement = -self.vertical_movement
+        self.rect.y = max(0, min(self.rect.y, self.height // 2 - self.rect.height))
 
-    # Create a sprite class for bat images
-    class BatSprite(pygame.sprite.Sprite):
-        def __init__(self, image_path, x, y, direction):
-            super().__init__()
-            self.image = pygame.image.load(image_path).convert_alpha()
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
-            self.direction = direction
-            self.vertical_movement = 0
 
-        def update(self):
-            # Move the bat left or right depending on its direction
-            if self.direction == "right":
-                self.rect.x += 5
-                if self.rect.x > window_size[0]:
-                    self.rect.x = -self.rect.width
-            else:
-                self.rect.x -= 5
-                if self.rect.x < -self.rect.width:
-                    self.rect.x = window_size[0]
+class HauntedHouseScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Haunted House", width=1025, height=768)
+        self.house_image = load_image("haunted_house7.png")
+        self.logo_image = load_image("logo.png")
+        self.skull_image = pygame.transform.scale(load_image("skull1.png"), (200, 200))
 
-            # Add vertical shakiness
-            self.vertical_movement += random.choice([-1, 1])
-            self.rect.y += self.vertical_movement
-            self.vertical_movement = -self.vertical_movement
+        self.ghosts = pygame.sprite.Group()
+        ghost_files = ["ghost1.png", "ghost2.png", "ghost3.png"]
+        ghost_positions = [(256, 384), (512, 384), (600, 384)]
+        for path, pos in zip(ghost_files, ghost_positions):
+            img = load_image(path)
+            self.ghosts.add(GhostSprite(img, pos[0], pos[1], self.width, self.height))
 
-            # Keep the bats within the top half of the window bounds
-            if self.rect.y < 0:
-                self.rect.y = 0
-            elif self.rect.y > window_size[1] // 2 - self.rect.height:
-                self.rect.y = window_size[1] // 2 - self.rect.height
+        eyes_img = load_image("eyes1.png")
+        self.eyes = EyesSprite(eyes_img, 512, 268, self.width, self.height)
 
-    # Create bat sprites
-    bats = pygame.sprite.Group()
-    bat_positions = [(60, 50), (750, 100), (70, 150)]  # Example positions
-    for i, position in enumerate(bat_positions):
-        direction = "right" if i % 2 == 0 else "left"
-        bat = BatSprite(bat_image_path, position[0], position[1], direction)
-        bats.add(bat)
+        self.bats = pygame.sprite.Group()
+        bat_img = load_image("bat1.png")
+        bat_positions = [(60, 50), (750, 100), (70, 150)]
+        for i, pos in enumerate(bat_positions):
+            direction = "right" if i % 2 == 0 else "left"
+            self.bats.add(BatSprite(bat_img, pos[0], pos[1], direction, self.width, self.height))
 
-    # Load the logo image
-    logo_image = pygame.image.load(logo_image_path).convert_alpha()
+        self.flash_skull = False
+        self.flash_time = 0
+        self.skull_flash_interval = random.randint(10, 30)
+        self.showed_logo = False
 
-    # Load the skull image
-    skull_image = pygame.image.load(skull_image_path).convert_alpha()
-    skull_image = pygame.transform.scale(skull_image, (200, 200))
-
-    # Main loop
-    def show_logo():
-        screen.fill((0, 0, 0))
-        logo_rect = logo_image.get_rect(center=(window_size[0] // 2, window_size[1] // 2))
-        screen.blit(logo_image, logo_rect)
-        pygame.display.flip()
-        time.sleep(5)
-
-    show_logo()
-
-    running = True
-    flash_skull = False
-    flash_time = 0
-    skull_flash_interval = random.randint(10, 30)  # Random interval for skull flash
-
-    while running:
+    def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    self.running = False
                 elif event.key == pygame.K_b:
-                    eyes.blink()
+                    self.eyes.blink()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                self.running = False
 
-        # Get the state of all keyboard keys
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            eyes.move(-5, 0)
+            self.eyes.move(-5, 0)
         if keys[pygame.K_RIGHT]:
-            eyes.move(5, 0)
+            self.eyes.move(5, 0)
         if keys[pygame.K_UP]:
-            eyes.move(0, -5)
+            self.eyes.move(0, -5)
         if keys[pygame.K_DOWN]:
-            eyes.move(0, 5)
+            self.eyes.move(0, 5)
 
-        # Clear the screen
-        screen.fill((0, 0, 0))
+    def update(self):
+        if not self.showed_logo:
+            return
+        self.ghosts.update()
+        self.bats.update()
+        if time.time() - self.flash_time > self.skull_flash_interval:
+            self.flash_skull = True
+            self.flash_time = time.time()
+            self.skull_flash_interval = random.randint(10, 30)
 
+    def draw(self):
+        if not self.showed_logo:
+            self.screen.fill((0, 0, 0))
+            logo_rect = self.logo_image.get_rect(center=(self.width // 2, self.height // 2))
+            self.screen.blit(self.logo_image, logo_rect)
+            pygame.display.flip()
+            time.sleep(5)
+            self.showed_logo = True
+            return
 
+        self.screen.fill((0, 0, 0))
+        self.ghosts.draw(self.screen)
+        self.screen.blit(self.house_image, (0, 0))
+        self.screen.blit(self.eyes.image, self.eyes.rect)
+        self.bats.draw(self.screen)
 
-        # Update and draw the ghost sprites behind the main image
-        ghosts.update()
-        ghosts.draw(screen)
-
-        # Draw the main image with transparency
-        screen.blit(image, (0, 0))
-
-        # Draw the eyes sprite in front of the main image
-        screen.blit(eyes.image, eyes.rect)
-
-        # Update and draw the bat sprites
-        bats.update()
-        bats.draw(screen)
-
-        # Check if it's time to flash the skull image
-        if time.time() - flash_time > skull_flash_interval:
-            flash_skull = True
-            flash_time = time.time()
-            skull_flash_interval = random.randint(10, 30)  # Reset interval
-
-        # Flash the skull image for a short duration
-        if flash_skull:
-            screen.blit(skull_image, ((window_size[0] - skull_image.get_width()) // 2, 
-                                      (window_size[1] - skull_image.get_height()) // 2))
+        if self.flash_skull:
+            self.screen.blit(self.skull_image, ((self.width - self.skull_image.get_width()) // 2,
+                                               (self.height - self.skull_image.get_height()) // 2))
             pygame.display.flip()
             time.sleep(0.5)
-            flash_skull = False
+            self.flash_skull = False
 
-        # Update the display
-        pygame.display.flip()
-
-        # Cap the frame rate
-        pygame.time.Clock().tick(60)
-
-    pygame.quit()
-    sys.exit()
 
 if __name__ == "__main__":
-    main('haunted_house7.png', ['ghost1.png', 'ghost2.png', 'ghost3.png'], 'eyes1.png', 'bat1.png', 'logo.png', 'skull1.png')
+    HauntedHouseScreensaver().run()

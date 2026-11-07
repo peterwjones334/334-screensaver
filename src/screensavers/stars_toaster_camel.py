@@ -1,28 +1,18 @@
-import sys
-import pygame
 import random
-import math
+import pygame
+from base import Screensaver, load_image
 
-# Initialize Pygame
-pygame.init()
 
-# Detect screen dimensions
-infoObject = pygame.display.Info()
-WIDTH = infoObject.current_w
-HEIGHT = infoObject.current_h
-
-# Colors
-BLACK = (0, 0, 0)
-
-# Star class
 class Star:
-    def __init__(self):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
         self.reset()
 
     def reset(self):
-        self.x = random.randint(-WIDTH // 2, WIDTH // 2)
-        self.y = random.randint(-HEIGHT // 2, HEIGHT // 2)
-        self.z = random.randint(1, WIDTH)
+        self.x = random.randint(-self.width // 2, self.width // 2)
+        self.y = random.randint(-self.height // 2, self.height // 2)
+        self.z = random.randint(1, self.width)
 
     def update(self, speed):
         self.z -= speed
@@ -30,122 +20,81 @@ class Star:
             self.reset()
 
     def show(self, screen):
-        sx = int((self.x / self.z) * WIDTH // 2 + WIDTH // 2)
-        sy = int((self.y / self.z) * HEIGHT // 2 + HEIGHT // 2)
-        r = max(1, int(WIDTH / self.z))
-        color = max(50, min(255, int(255 * (1 - self.z / WIDTH))))
-
-        if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
+        sx = int((self.x / self.z) * self.width // 2 + self.width // 2)
+        sy = int((self.y / self.z) * self.height // 2 + self.height // 2)
+        r = max(1, int(self.width / self.z))
+        color = max(50, min(255, int(255 * (1 - self.z / self.width))))
+        if 0 <= sx < self.width and 0 <= sy < self.height:
             pygame.draw.circle(screen, (color, color, color), (sx, sy), r)
 
-# Toaster class
-class Toaster:
-    def __init__(self, image, speed):
+
+class FlyingObject:
+    def __init__(self, image, speed, width, height, always_left=False):
         self.image = image
         self.speed = speed
+        self.width = width
+        self.height = height
+        self.always_left = always_left
         self.reset()
 
     def reset(self):
-        self.x = random.randint(0, WIDTH - self.image.get_width())
-        self.y = random.randint(0, HEIGHT - self.image.get_height())
-        self.direction = random.choice(["left", "right"])
+        if self.always_left:
+            self.x = 0
+            self.y = random.randint(0, self.height - self.image.get_height())
+            self.direction = "right"
+        else:
+            self.x = random.randint(0, self.width - self.image.get_width())
+            self.y = random.randint(0, self.height - self.image.get_height())
+            self.direction = random.choice(["left", "right"])
 
     def update(self):
-        if self.direction == "left":
-            self.x -= self.speed
-            if self.x < -self.image.get_width():
+        if self.always_left or self.direction == "right":
+            self.x += self.speed
+            if self.x > self.width:
                 self.reset()
         else:
-            self.x += self.speed
-            if self.x > WIDTH:
+            self.x -= self.speed
+            if self.x < -self.image.get_width():
                 self.reset()
 
     def show(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
-# Camel class
-class Camel:
-    def __init__(self, image, speed):
-        self.image = image
-        self.speed = speed
-        self.reset()
 
-    def reset(self):
-        self.x = 0
-        self.y = random.randint(0, HEIGHT - self.image.get_height())
+class StarsToasterCamelScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Starfield with Flying Toasters & Camels")
+        toaster_img = load_image("toaster.png")
+        camel_img = load_image("camel.png")
+
+        self.stars = [Star(self.width, self.height) for _ in range(400)]
+        self.toasters = [
+            FlyingObject(toaster_img, random.randint(1, 5), self.width, self.height)
+            for _ in range(10)
+        ]
+        self.camels = [
+            FlyingObject(camel_img, random.randint(1, 5), self.width, self.height, always_left=True)
+            for _ in range(1)
+        ]
+        self.star_speed = 10
 
     def update(self):
-        self.x += self.speed
-        if self.x > WIDTH:
-            self.reset()
+        for star in self.stars:
+            star.update(self.star_speed)
+        for t in self.toasters:
+            t.update()
+        for c in self.camels:
+            c.update()
 
-    def show(self, screen):
-        screen.blit(self.image, (self.x, self.y))    
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        for star in self.stars:
+            star.show(self.screen)
+        for t in self.toasters:
+            t.show(self.screen)
+        for c in self.camels:
+            c.show(self.screen)
 
-# Function to handle the screensaver behavior
-def run_screensaver():
-    global WIDTH, HEIGHT
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    pygame.display.set_caption("Starfield with Flying Toasters & Camels Screensaver")
 
-    toaster_image = pygame.image.load("toaster.png").convert_alpha()
-    camel_image = pygame.image.load("camel.png").convert_alpha()
-
-    num_stars = 4000
-    stars = [Star() for _ in range(num_stars)]
-
-    num_toasters = 1000
-    toasters = [Toaster(toaster_image, random.randint(1, 5)) for _ in range(num_toasters)]
-
-    num_camels = 1
-    camels = [Camel(camel_image, random.randint(1, 5)) for _ in range(num_camels)]
-
-    running = True
-    clock = pygame.time.Clock()
-    star_speed = 100
-
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.VIDEORESIZE:
-                WIDTH, HEIGHT = event.w, event.h
-                screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-                for star in stars:
-                    star.reset()
-                for toaster in toasters:
-                    toaster.reset()
-                for camel in camels:
-                    camel.reset()
-
-        screen.fill(BLACK)
-
-        for star in stars:
-            star.update(star_speed)
-            star.show(screen)
-
-        for toaster in toasters:
-            toaster.update()
-            toaster.show(screen)
-
-        for camel in camels:
-            camel.update()
-            camel.show(screen)
-
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
-
-# Check command line arguments to determine mode
-if len(sys.argv) == 1:
-    run_screensaver()
-elif sys.argv[1] == '/s':
-    run_screensaver()
-elif sys.argv[1] == '/c':
-    print("No configuration needed.")
-elif sys.argv[1] == '/p':
-    hwnd = int(sys.argv[2])
-    print("Preview window not implemented.")
-else:
-    run_screensaver()
+if __name__ == "__main__":
+    StarsToasterCamelScreensaver().run()
