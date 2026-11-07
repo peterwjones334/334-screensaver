@@ -1,27 +1,18 @@
-import pygame
 import random
-import math
+import pygame
+from base import Screensaver
 
-# Initialize Pygame
-pygame.init()
 
-# Screen dimensions
-WIDTH = 800
-HEIGHT = 600
-
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
-# Star class
 class Star:
-    def __init__(self):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
         self.reset()
 
     def reset(self):
-        self.x = random.randint(-WIDTH // 2, WIDTH // 2)
-        self.y = random.randint(-HEIGHT // 2, HEIGHT // 2)
-        self.z = random.randint(1, WIDTH)
+        self.x = random.randint(-self.width // 2, self.width // 2)
+        self.y = random.randint(-self.height // 2, self.height // 2)
+        self.z = random.randint(1, self.width)
 
     def update(self, speed):
         self.z -= speed
@@ -29,42 +20,29 @@ class Star:
             self.reset()
 
     def show(self, screen):
-        # Map star position from 3D to 2D
-        sx = int((self.x / self.z) * WIDTH // 2 + WIDTH // 2)
-        sy = int((self.y / self.z) * HEIGHT // 2 + HEIGHT // 2)
-
-        # Map star size and brightness based on z distance
-        r = max(1, int(WIDTH / self.z))
-        color = max(50, min(255, int(255 * (1 - self.z / WIDTH))))
-
-        if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
+        sx = int((self.x / self.z) * self.width // 2 + self.width // 2)
+        sy = int((self.y / self.z) * self.height // 2 + self.height // 2)
+        r = max(1, int(self.width / self.z))
+        color = max(50, min(255, int(255 * (1 - self.z / self.width))))
+        if 0 <= sx < self.width and 0 <= sy < self.height:
             pygame.draw.circle(screen, (color, color, color), (sx, sy), r)
 
-# Setup screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Starfield Screensaver")
 
-# Create a list of stars
-num_stars = 400
-stars = [Star() for _ in range(num_stars)]
+class StarfieldScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Starfield Screensaver")
+        self.speed = 10
+        self.stars = [Star(self.width, self.height) for _ in range(400)]
 
-# Main loop
-running = True
-clock = pygame.time.Clock()
-speed = 10
+    def update(self):
+        for star in self.stars:
+            star.update(self.speed)
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        for star in self.stars:
+            star.show(self.screen)
 
-    screen.fill(BLACK)
 
-    for star in stars:
-        star.update(speed)
-        star.show(screen)
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+if __name__ == "__main__":
+    StarfieldScreensaver().run()

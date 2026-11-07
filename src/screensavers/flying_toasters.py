@@ -1,26 +1,18 @@
-import pygame
 import random
-import math
+import pygame
+from base import Screensaver, load_image
 
-# Initialize Pygame
-pygame.init()
 
-# Screen dimensions
-WIDTH = 800
-HEIGHT = 600
-
-# Colors
-BLACK = (0, 0, 0)
-
-# Star class
 class Star:
-    def __init__(self):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
         self.reset()
 
     def reset(self):
-        self.x = random.randint(-WIDTH // 2, WIDTH // 2)
-        self.y = random.randint(-HEIGHT // 2, HEIGHT // 2)
-        self.z = random.randint(1, WIDTH)
+        self.x = random.randint(-self.width // 2, self.width // 2)
+        self.y = random.randint(-self.height // 2, self.height // 2)
+        self.z = random.randint(1, self.width)
 
     def update(self, speed):
         self.z -= speed
@@ -28,24 +20,25 @@ class Star:
             self.reset()
 
     def show(self, screen):
-        sx = int((self.x / self.z) * WIDTH // 2 + WIDTH // 2)
-        sy = int((self.y / self.z) * HEIGHT // 2 + HEIGHT // 2)
-        r = max(1, int(WIDTH / self.z))
-        color = max(50, min(255, int(255 * (1 - self.z / WIDTH))))
-
-        if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
+        sx = int((self.x / self.z) * self.width // 2 + self.width // 2)
+        sy = int((self.y / self.z) * self.height // 2 + self.height // 2)
+        r = max(1, int(self.width / self.z))
+        color = max(50, min(255, int(255 * (1 - self.z / self.width))))
+        if 0 <= sx < self.width and 0 <= sy < self.height:
             pygame.draw.circle(screen, (color, color, color), (sx, sy), r)
 
-# Toaster class
+
 class Toaster:
-    def __init__(self, image, speed):
+    def __init__(self, image, speed, width, height):
         self.image = image
         self.speed = speed
+        self.width = width
+        self.height = height
         self.reset()
 
     def reset(self):
-        self.x = random.randint(0, WIDTH - self.image.get_width())
-        self.y = random.randint(0, HEIGHT - self.image.get_height())
+        self.x = random.randint(0, self.width - self.image.get_width())
+        self.y = random.randint(0, self.height - self.image.get_height())
         self.direction = random.choice(["left", "right"])
 
     def update(self):
@@ -55,50 +48,37 @@ class Toaster:
                 self.reset()
         else:
             self.x += self.speed
-            if self.x > WIDTH:
+            if self.x > self.width:
                 self.reset()
 
     def show(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
-# Setup screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Starfield with Flying Toasters Screensaver")
 
-# Load toaster image
-toaster_image = pygame.image.load("toaster.png").convert_alpha()
+class FlyingToastersScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="Flying Toasters")
+        self.toaster_image = load_image("toaster.png")
+        self.stars = [Star(self.width, self.height) for _ in range(400)]
+        self.toasters = [
+            Toaster(self.toaster_image, random.randint(1, 5), self.width, self.height)
+            for _ in range(10)
+        ]
+        self.star_speed = 10
 
-# Create a list of stars
-num_stars = 400
-stars = [Star() for _ in range(num_stars)]
+    def update(self):
+        for star in self.stars:
+            star.update(self.star_speed)
+        for toaster in self.toasters:
+            toaster.update()
 
-# Create a list of toasters
-num_toasters = 10
-toasters = [Toaster(toaster_image, random.randint(1, 5)) for _ in range(num_toasters)]
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        for star in self.stars:
+            star.show(self.screen)
+        for toaster in self.toasters:
+            toaster.show(self.screen)
 
-# Main loop
-running = True
-clock = pygame.time.Clock()
-star_speed = 10
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    screen.fill(BLACK)
-
-    # Update and draw stars
-    for star in stars:
-        star.update(star_speed)
-        star.show(screen)
-
-    # Update and draw toasters
-    for toaster in toasters:
-        toaster.update()
-        toaster.show(screen)
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+if __name__ == "__main__":
+    FlyingToastersScreensaver().run()
