@@ -68,6 +68,47 @@ Pure-Pygame screensavers subclass `Screensaver` from `base.py`. This provides:
 
 OpenGL scripts keep their own context but use the same asset helper and a consistent `run()` entry point.
 
+## Adding a New Screensaver
+
+1. Create a new file in `src/screensavers/` (e.g. `my_screensaver.py`).
+2. Subclass `Screensaver` and implement `update()` and `draw()`.
+3. Load any images with `load_image()` (place files in `assets/` or the working directory).
+4. Add a `if __name__ == "__main__":` block that instantiates and runs the class.
+
+Minimal example:
+
+```python
+import random
+from base import Screensaver, load_image
+
+class MyScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="My Screensaver")
+        # self.image = load_image("my_sprite.png")  # optional
+        self.x = self.width // 2
+        self.y = self.height // 2
+        self.dx = random.choice([-3, 3])
+
+    def update(self):
+        self.x += self.dx
+        if self.x < 0 or self.x > self.width:
+            self.dx = -self.dx
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        # self.screen.blit(self.image, (self.x, self.y))
+
+if __name__ == "__main__":
+    MyScreensaver().run()
+```
+
+### Tips
+
+- Use `self.width`, `self.height`, `self.screen`, and `self.clock` from the base class.
+- Override `handle_events()` only if you need custom keyboard behaviour (still call `super()` or handle quit yourself).
+- For fullscreen by default: `super().__init__(..., fullscreen=True)`.
+- OpenGL screensavers should create their own `DOUBLEBUF | OPENGL` context and use `asset_path()` / `load_image()` for files; see `3d_pipes.py` or `random_objects.py` for the pattern.
+
 ## Available Screensavers
 
 ### Pure Pygame
