@@ -4,6 +4,8 @@ Classic After Dark–style screensavers implemented in Pygame (with a few OpenGL
 
 Works on Linux, Raspberry Pi OS, Windows, and macOS.
 
+A browser / Three.js starter is also available in the `web/` folder.
+
 ## Project Structure
 
 ```
@@ -20,6 +22,12 @@ Works on Linux, Raspberry Pi OS, Windows, and macOS.
 │       ├── __init__.py
 │       └── *.py                # Individual screensavers
 ├── tools/                     # Utility scripts (background removal, video helpers)
+├── web/                       # Three.js / WebGL starter
+│   ├── index.html
+│   ├── src/
+│   │   ├── base.js
+│   │   └── starfield.js
+│   └── README.md
 └── archive/                   # Older versioned experiments
 ```
 
@@ -237,6 +245,10 @@ Speed, direction, and bounds checks are entirely up to your `update()` method. T
 - `3d_text.py`
 - `haunted_house_gl.py`
 - `random_objects.py`
+
+## Web / Three.js starter
+
+A minimal browser version lives in [`web/`](web/). It includes a shared base class and a starfield example. See [`web/README.md`](web/README.md) and the [porting guide](docs/porting-to-javascript.md).
 
 ## Platform Notes
 
