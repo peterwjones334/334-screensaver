@@ -246,6 +246,7 @@ Detailed setup instructions are in the `docs/` folder:
 - [macOS](docs/macos.md)
 - [Linux / Raspberry Pi](docs/linux-raspberry-pi.md)
 - [About After Dark](docs/about-afterdark.md)
+- [Porting to JavaScript / WebGL / Three.js](docs/porting-to-javascript.md)
 
 ## License
 
