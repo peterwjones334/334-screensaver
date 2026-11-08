@@ -109,6 +109,115 @@ if __name__ == "__main__":
 - For fullscreen by default: `super().__init__(..., fullscreen=True)`.
 - OpenGL screensavers should create their own `DOUBLEBUF | OPENGL` context and use `asset_path()` / `load_image()` for files; see `3d_pipes.py` or `random_objects.py` for the pattern.
 
+## Base Class Functions
+
+The shared helpers in `base.py`:
+
+| Function / Method | Description |
+|-------------------|-------------|
+| `find_assets_dir()` | Locates the `assets/` directory (or falls back to cwd). |
+| `asset_path(*parts)` | Returns an absolute path inside the assets directory. |
+| `load_image(*parts, convert_alpha=True)` | Loads a PNG/JPG from assets (or cwd fallback). Use `convert_alpha=False` for opaque backgrounds. |
+| `Screensaver.__init__(title, width, height, fullscreen, fps)` | Sets up the window, clock, and flags. |
+| `handle_events()` | Default quit-on-key/mouse/close behaviour. Override for custom controls. |
+| `update()` | Override to advance simulation state each frame. |
+| `draw()` | Override to render the current frame. |
+| `run()` | Main loop: events → update → draw → flip. Call this to start. |
+
+Instance attributes available after `super().__init__()`: `self.screen`, `self.width`, `self.height`, `self.clock`, `self.fps`, `self.running`, `self.fullscreen`.
+
+## Adding a New Image (Sprite)
+
+1. Place the PNG (with transparency preferred) in `assets/` (or temporarily in the working directory).
+2. Load it in your screensaver:
+
+```python
+from base import Screensaver, load_image
+
+class MyScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="With Sprite")
+        self.sprite = load_image("my_sprite.png")   # or load_image("sprites", "my_sprite.png")
+        self.x = 100
+        self.y = 100
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(self.sprite, (self.x, self.y))
+```
+
+`load_image` automatically converts the surface for fast blitting and alpha.
+
+## Adding a New Background
+
+1. Place a background image in `assets/` (or cwd).
+2. Load and scale it to the screen size:
+
+```python
+from base import Screensaver, load_image
+import pygame
+
+class MyScreensaver(Screensaver):
+    def __init__(self):
+        super().__init__(title="With Background")
+        bg = load_image("my_background.png", convert_alpha=False)
+        self.background = pygame.transform.scale(bg, (self.width, self.height))
+
+    def draw(self):
+        self.screen.blit(self.background, (0, 0))
+        # draw sprites on top
+```
+
+Use `convert_alpha=False` for opaque backgrounds (slightly faster). For scrolling or parallax backgrounds, keep the original surface and blit portions or offset copies each frame.
+
+## Controlling Movement
+
+Movement is handled in `update()`. Common patterns:
+
+### Constant velocity with bounce
+```python
+def update(self):
+    self.x += self.dx
+    self.y += self.dy
+    if self.x < 0 or self.x > self.width - self.sprite.get_width():
+        self.dx = -self.dx
+    if self.y < 0 or self.y > self.height - self.sprite.get_height():
+        self.dy = -self.dy
+```
+
+### Wrap-around (flying off one side, reappearing on the other)
+```python
+def update(self):
+    self.x += self.speed
+    if self.x > self.width:
+        self.x = -self.sprite.get_width()
+```
+
+### Random direction changes
+```python
+def update(self):
+    self.x += self.dx
+    if random.random() < 0.02:          # occasional change
+        self.dx = random.choice([-3, -2, 2, 3])
+```
+
+### Keyboard control (override `handle_events`)
+```python
+def handle_events(self):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            self.running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                self.dx = -5
+            elif event.key == pygame.K_RIGHT:
+                self.dx = 5
+            else:
+                self.running = False
+```
+
+Speed, direction, and bounds checks are entirely up to your `update()` method. The base class only advances the clock and calls your methods.
+
 ## Available Screensavers
 
 ### Pure Pygame
