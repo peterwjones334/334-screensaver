@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>334 Screensavers — Boids Lab</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #001100;
+      font-family: "Courier New", monospace;
+    }
+    #info {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #33ff66;
+      font-size: 13px;
+      pointer-events: none;
+      text-shadow: 0 0 4px #33ff66;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">BOIDS.EXE — LAB EXPERIMENT  //  GREEN PHOSPHOR  //  Esc or click to abort</div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" src="src/boids.js"></script>
+</body>
+</html>
