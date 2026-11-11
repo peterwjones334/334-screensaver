@@ -21,6 +21,7 @@ Then open:
 - http://localhost:8000/haunted.html     → haunted house (procedural audio)
 - http://localhost:8000/asylum.html      → insane asylum aquarium
 - http://localhost:8000/boids.html       → boids flocking lab experiment
+- http://localhost:8000/doomsday.html    → doomsday clock + event ticker
 
 ## Structure
 
@@ -30,12 +31,14 @@ web/
 ├── haunted.html
 ├── asylum.html
 ├── boids.html
+├── doomsday.html
 ├── src/
 │   ├── base.js
 │   ├── starfield.js
 │   ├── haunted_house.js
 │   ├── asylum_aquarium.js
-│   └── boids.js
+│   ├── boids.js
+│   └── doomsday.js
 └── README.md
 ```
 
@@ -46,7 +49,8 @@ Three.js is loaded via import map from unpkg (no build step required).
 - **starfield.js** — classic starfield
 - **haunted_house.js** — foggy house, ghosts, bats, lightning + procedural creepy audio
 - **asylum_aquarium.js** — cracked asylum tank with Dread Octopus, Mad Barracuda, and frantic Shrimpies
-- **boids.js** — classic flocking (separation / alignment / cohesion) rendered as green phosphor vector lines with fading trails and a slow screen-burn overlay. Styled as a miscalculated computer-science lab experiment.
+- **boids.js** — classic flocking rendered as green phosphor vector lines with trails and screen-burn
+- **doomsday.js** — Doomsday Clock that creeps toward midnight while a scrolling ticker of global events raises the alert level
 
 ## Adding another screensaver
 
