@@ -17,8 +17,9 @@ npx serve web
 
 Then open:
 
-- http://localhost:8000/          → starfield
-- http://localhost:8000/haunted.html → haunted house (with procedural creepy audio)
+- http://localhost:8000/                 → starfield
+- http://localhost:8000/haunted.html     → haunted house (procedural audio)
+- http://localhost:8000/asylum.html      → insane asylum aquarium
 
 ## Structure
 
@@ -26,29 +27,27 @@ Then open:
 web/
 ├── index.html
 ├── haunted.html
+├── asylum.html
 ├── src/
 │   ├── base.js
 │   ├── starfield.js
-│   └── haunted_house.js
+│   ├── haunted_house.js
+│   └── asylum_aquarium.js
 └── README.md
 ```
 
 Three.js is loaded via import map from unpkg (no build step required).
 
-## Haunted House
+## Screensavers
 
-`src/haunted_house.js` is a self-contained scene:
-
-- Foggy night with a simple house silhouette and glowing windows
-- Drifting translucent ghosts
-- Flying bats
-- Occasional lightning flashes
-- Procedural ambient loop (low drone + filtered wind noise + random creaks) generated with the Web Audio API — no external audio files needed. Click or press a key once to start audio (browser autoplay policy).
+- **starfield.js** — classic starfield
+- **haunted_house.js** — foggy house, ghosts, bats, lightning + procedural creepy audio
+- **asylum_aquarium.js** — cracked asylum tank with Dread Octopus, Mad Barracuda, and a swarm of frantic Shrimpies. Flickering fluorescents and occasional code-red alarm flashes.
 
 ## Adding another screensaver
 
 1. Create `src/my_saver.js` that imports `Screensaver` from `./base.js`.
 2. Subclass it, implement `update(delta)`, and add objects to `this.scene`.
-3. Point a new HTML file at the script (or extend the existing ones).
+3. Point a new HTML file at the script.
 
 See `../docs/porting-to-javascript.md` for the full porting guide.
