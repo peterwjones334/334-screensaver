@@ -22,6 +22,7 @@ Then open:
 - http://localhost:8000/asylum.html      → insane asylum aquarium
 - http://localhost:8000/boids.html       → boids flocking lab experiment
 - http://localhost:8000/doomsday.html    → doomsday clock + event ticker
+- http://localhost:8000/trex.html        → 3D vector T-Rex maze
 
 ## Structure
 
@@ -32,13 +33,15 @@ web/
 ├── asylum.html
 ├── boids.html
 ├── doomsday.html
+├── trex.html
 ├── src/
 │   ├── base.js
 │   ├── starfield.js
 │   ├── haunted_house.js
 │   ├── asylum_aquarium.js
 │   ├── boids.js
-│   └── doomsday.js
+│   ├── doomsday.js
+│   └── trex_maze.js
 └── README.md
 ```
 
@@ -51,6 +54,7 @@ Three.js is loaded via import map from unpkg (no build step required).
 - **asylum_aquarium.js** — cracked asylum tank with Dread Octopus, Mad Barracuda, and frantic Shrimpies
 - **boids.js** — classic flocking rendered as green phosphor vector lines with trails and screen-burn
 - **doomsday.js** — Doomsday Clock that creeps toward midnight while a scrolling ticker of global events raises the alert level
+- **trex_maze.js** — 3D wireframe maze. An ASCII T-Rex hides inside. When found it roars, the screen goes red, then a new maze is generated.
 
 ## Adding another screensaver
 
