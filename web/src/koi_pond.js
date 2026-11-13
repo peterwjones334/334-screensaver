@@ -126,17 +126,19 @@ export class KoiPondScreensaver extends Screensaver {
       eye.position.set(0.08, 0.05, 0.25);
       group.add(eye);
 
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.8 + Math.random() * 0.6;
       group.position.set(
-        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 6,
         -0.15,
-        (Math.random() - 0.5) * 8
+        (Math.random() - 0.5) * 6
       );
       group.userData = {
-        angle: Math.random() * Math.PI * 2,
-        speed: 0.4 + Math.random() * 0.5,
-        radius: 1.2 + Math.random() * 3.5,
+        vx: Math.cos(angle) * speed,
+        vz: Math.sin(angle) * speed,
+        speed: speed,
+        turnTimer: 2 + Math.random() * 4,
         wobble: Math.random() * Math.PI * 2,
-        turnTimer: 0,
       };
       this.scene.add(group);
       this.koi.push(group);
@@ -165,38 +167,61 @@ export class KoiPondScreensaver extends Screensaver {
 
   update(delta) {
     const t = this.clock.elapsedTime;
+    const pondRadius = 5.8;
 
     // Slow orbiting camera
     this.camera.position.x = Math.sin(t * 0.12) * 2;
     this.camera.position.z = 6 + Math.cos(t * 0.1) * 1.5;
     this.camera.lookAt(0, 0, 0);
 
-    // Koi swimming in gentle curves
-    this.koi.forEach((k, i) => {
+    // Koi swimming with velocity
+    this.koi.forEach((k) => {
       const u = k.userData;
-      u.angle += u.speed * delta;
       u.wobble += delta * 2;
-
-      // Occasional direction change
       u.turnTimer -= delta;
+
+      // Occasional gentle direction change
       if (u.turnTimer <= 0) {
-        u.radius = 1 + Math.random() * 4;
-        u.turnTimer = 4 + Math.random() * 6;
+        const turn = (Math.random() - 0.5) * 1.2;
+        const angle = Math.atan2(u.vz, u.vx) + turn;
+        u.vx = Math.cos(angle) * u.speed;
+        u.vz = Math.sin(angle) * u.speed;
+        u.turnTimer = 2 + Math.random() * 5;
       }
 
-      k.position.x = Math.cos(u.angle) * u.radius;
-      k.position.z = Math.sin(u.angle) * u.radius;
+      // Move
+      k.position.x += u.vx * delta;
+      k.position.z += u.vz * delta;
       k.position.y = -0.15 + Math.sin(u.wobble) * 0.04;
 
+      // Bounce off pond edge (soft)
+      const dist = Math.sqrt(k.position.x * k.position.x + k.position.z * k.position.z);
+      if (dist > pondRadius) {
+        const nx = k.position.x / dist;
+        const nz = k.position.z / dist;
+        k.position.x = nx * pondRadius;
+        k.position.z = nz * pondRadius;
+        // Reflect velocity
+        const dot = u.vx * nx + u.vz * nz;
+        u.vx -= 2 * dot * nx;
+        u.vz -= 2 * dot * nz;
+        // Slight speed variation after bounce
+        u.speed = 0.7 + Math.random() * 0.7;
+        const len = Math.sqrt(u.vx * u.vx + u.vz * u.vz) || 1;
+        u.vx = (u.vx / len) * u.speed;
+        u.vz = (u.vz / len) * u.speed;
+      }
+
       // Face direction of travel
-      k.rotation.y = -u.angle + Math.PI / 2;
+      const angle = Math.atan2(u.vz, u.vx);
+      k.rotation.y = -angle + Math.PI / 2;
 
       // Gentle body sway
       k.children[0].rotation.z = Math.sin(u.wobble * 1.5) * 0.15;
     });
 
     // Ripples following some koi
-    this.ripples.forEach((r, i) => {
+    this.ripples.forEach((r) => {
       r.userData.age += delta;
       const s = 1 + r.userData.age * 0.8;
       r.scale.set(s, s, 1);
