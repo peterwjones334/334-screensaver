@@ -26,8 +26,8 @@ class Star {
 export class StarfieldScreensaver extends Screensaver {
   constructor() {
     super({ title: 'Starfield Screensaver' });
-    this.speed = 8;
-    this.starCount = 600;
+    this.speed = 1;
+    this.starCount = 100;
 
     this.stars = Array.from(
       { length: this.starCount },
