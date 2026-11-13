@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>334 Screensavers — Zen Garden</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #1a1a22;
+      font-family: system-ui, sans-serif;
+    }
+    #info {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      color: #aabbcc;
+      font-size: 13px;
+      pointer-events: none;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Zen Garden — click or press a key for music · Esc or click to stop</div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" src="src/zen_garden.js"></script>
+</body>
+</html>

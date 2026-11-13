@@ -24,6 +24,7 @@ Then open:
 - http://localhost:8000/doomsday.html    → doomsday clock + event ticker
 - http://localhost:8000/trex.html        → 3D vector T-Rex maze
 - http://localhost:8000/galaxians.html   → self-playing Galaxians arcade
+- http://localhost:8000/zen.html         → Japanese ornamental garden
 
 ## Structure
 
@@ -36,6 +37,7 @@ web/
 ├── doomsday.html
 ├── trex.html
 ├── galaxians.html
+├── zen.html
 ├── src/
 │   ├── base.js
 │   ├── starfield.js
@@ -44,7 +46,8 @@ web/
 │   ├── boids.js
 │   ├── doomsday.js
 │   ├── trex_maze.js
-│   └── galaxians.js
+│   ├── galaxians.js
+│   └── zen_garden.js
 └── README.md
 ```
 
@@ -58,7 +61,8 @@ Three.js is loaded via import map from unpkg (no build step required).
 - **boids.js** — classic flocking rendered as green phosphor vector lines with trails and screen-burn
 - **doomsday.js** — Doomsday Clock that creeps toward midnight while a scrolling ticker of global events raises the alert level
 - **trex_maze.js** — 3D wireframe maze. An ASCII T-Rex hides inside. When found it roars, the screen goes red, then a new maze is generated.
-- **galaxians.js** — self-playing Galaxians-style shooter. 3 levels + boss. 4 alien types (scout, fighter, bomber, elite) plus a queen boss. Score counter, Web Audio sound effects, and an annoying screensaver that keeps announcing its presence.
+- **galaxians.js** — self-playing Galaxians-style shooter. 3 levels + boss. 4 alien types plus a queen boss. Score counter, sound effects, and annoying screensaver announcements.
+- **zen_garden.js** — Peaceful Japanese ornamental garden. Raked gravel, stone lantern, maple, bamboo, still pond with ripples and koi, falling leaves in the wind. Soft ambient music (click or key to start).
 
 ## Adding another screensaver
 
